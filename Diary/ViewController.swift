@@ -137,3 +137,25 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
         
     }
 }
+
+//MARK: - extension DiaryDetailViewController 접근
+extension ViewController: UICollectionViewDelegate {
+    //특정셀이 선택됨을 알리는 메소드; 여기에 터치시 DiaryDetailViewController가 Show 하도록 설정;
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        //스토리보드에 있는 컨트롤러 객체 얻어오기
+        guard let viewController = self.storyboard?.instantiateViewController(withIdentifier: "DiaryDetailViewController") as? DiaryDetailViewController else { return }
+        let diary = self.diaryList[indexPath.row] // 현재 선택된 일기의 객체를 할당
+        viewController.diary = diary
+        viewController.indexPath = indexPath
+        
+//        //선택시 컬러지정
+//        let selectedCell:UICollectionViewCell = collectionView.cellForItem(at: indexPath)!
+//        selectedCell.contentView.backgroundColor = UIColor.darkGray
+//        // 컬러해제
+//        let cellToDeselect:UICollectionViewCell = collectionView.cellForItem(at: indexPath)!
+//        cellToDeselect.contentView.backgroundColor = UIColor.clear
+
+        // 콜렉션뷰에서 셀이 선택되면 DiaryDetailViewController가 네비게이션에 푸쉬되면서 화면전환
+        self.navigationController?.pushViewController(viewController, animated: true)
+    }
+}

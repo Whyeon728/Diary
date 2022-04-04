@@ -133,7 +133,7 @@
         <!--Diary Detail View Controller-->
         <scene sceneID="4ZW-cx-u4N">
             <objects>
-                <viewController id="Zgo-Y0-2qf" customClass="DiaryDetailViewController" customModule="Diary" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="DiaryDetailViewController" id="Zgo-Y0-2qf" customClass="DiaryDetailViewController" customModule="Diary" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ZSy-yK-Jde">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -189,19 +189,25 @@
                                 </subviews>
                             </stackView>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="50" translatesAutoresizingMaskIntoConstraints="NO" id="FA0-3D-Pef">
-                                <rect key="frame" x="115" y="427.66666666666669" width="184" height="31"/>
+                                <rect key="frame" x="133.66666666666669" y="427.66666666666669" width="146.66666666666669" height="31"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0oS-4C-4cY">
-                                        <rect key="frame" x="0.0" y="0.0" width="67" height="31"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="48.333333333333336" height="31"/>
                                         <state key="normal" title="Button"/>
                                         <buttonConfiguration key="configuration" style="plain" title="수정"/>
+                                        <connections>
+                                            <action selector="tabEditButton:" destination="Zgo-Y0-2qf" eventType="touchUpInside" id="uA0-xF-mp7"/>
+                                        </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QRi-F4-eTk">
-                                        <rect key="frame" x="117" y="0.0" width="67" height="31"/>
+                                        <rect key="frame" x="98.333333333333343" y="0.0" width="48.333333333333343" height="31"/>
                                         <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="plain" title="Button">
+                                        <buttonConfiguration key="configuration" style="plain" title="삭제">
                                             <color key="baseForegroundColor" systemColor="systemRedColor"/>
                                         </buttonConfiguration>
+                                        <connections>
+                                            <action selector="tabDeleteButton:" destination="Zgo-Y0-2qf" eventType="touchUpInside" id="nON-G5-EKm"/>
+                                        </connections>
                                     </button>
                                 </subviews>
                             </stackView>
@@ -225,6 +231,11 @@
                             <constraint firstItem="6fY-gB-QKK" firstAttribute="leading" secondItem="9cQ-Vl-g4E" secondAttribute="leading" constant="24" id="tqv-I0-OLe"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="contentsTextView" destination="IDB-sW-4uO" id="mSI-4S-xap"/>
+                        <outlet property="dateLabel" destination="iWd-VD-C6G" id="8qK-fo-Z3E"/>
+                        <outlet property="titleLabel" destination="6e8-Mr-bUQ" id="m2l-j5-f7o"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3lL-qE-g3e" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
