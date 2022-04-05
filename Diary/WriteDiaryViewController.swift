@@ -7,6 +7,12 @@
 
 import UIKit
 
+//수정 모드 열거형
+enum DiaryEditorMode {
+    case new
+    case edit(IndexPath, Diary)
+}
+
 //MARK: - 일기작성 화면에서 작성된 내용을 전달하는 delegate
 protocol WriteDiaryViewDelegate: AnyObject {
     func didSelectRegister(diary: Diary) // 내용이 작성된 다이어리 객체를 전달하는 메소드
@@ -26,6 +32,7 @@ class WriteDiaryViewController: UIViewController {
     private let datePicker = UIDatePicker() // 데이트 피커 객체 생성
     private var diaryDate: Date? // 데이트피커에서 선택된 날짜 데이터를 담는 프로퍼티
     weak var delegate: WriteDiaryViewDelegate? // 델리게이트 프로퍼티 선언
+    var diaryEditorMode: DiaryEditorMode = .new // 수정 모드를 저장할 프로퍼티 초기값 new
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,7 +40,31 @@ class WriteDiaryViewController: UIViewController {
         self.configureDatePicker()
         self.confirmButton.isEnabled = false // 처음 뷰를 로드할때 등록버튼 비활성
         self.configureInputField() // 등록버튼 활성화여부 타겟, 델리게이트
+        self.configureEditMode() // 일기장 상세화면에서 수정을 눌렀을때 전달받은 데이터를 일기작성화면에서 채워진채 보여줌
     }
+    
+    private func dateToString(date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yy년 MM월 dd일(EEEEE)"
+        formatter.locale = Locale(identifier: "ko_KR")
+        return formatter.string(from: date)
+    }
+    
+    //MARK: - 수정 화면 띄우기 메소드
+    // https://babbab2.tistory.com/117?category=828998  연관값 관련
+    private func configureEditMode() {
+        switch self.diaryEditorMode {
+        case let .edit(_, diary):
+            self.titleTextField.text = diary.title
+            self.contentsTextView.text = diary.contents
+            self.dateTextField.text = self.dateToString(date: diary.date)
+            self.diaryDate = diary.date
+            self.confirmButton.title = "수정" // 등록버튼을 수정버튼으로 변경
+        default:
+            break
+        }
+    }
+
     
     //MARK: - 내용 TextView 테두리 설정
     private func configureContentsTextView() {
@@ -111,7 +142,20 @@ class WriteDiaryViewController: UIViewController {
         guard let contents = self.contentsTextView.text else {return}
         guard let date = self.diaryDate else { return } //데이트 피커에서 선택된 값을 문자열로 저장한 프로퍼티 할당
         let diary = Diary(title: title, contents: contents, date: date, isStar: false) // 다이어리객체 생성
-        self.delegate?.didSelectRegister(diary: diary)
+        
+        // 등록인지 수정인지 체킹
+        switch self.diaryEditorMode {
+        case .new: //등록
+            self.delegate?.didSelectRegister(diary: diary)
+        case let .edit(IndexPath, _):
+            NotificationCenter.default.post(
+                name: NSNotification.Name("editDiary"), //노티피케이션의 이름; 이 이름으로 옵저버에서 메시지 발생 관찰
+                object: diary, //노티피케이션센터를 통해 전달할 객체의 이름; 수정된 내용의 다이어리 객체
+                userInfo: [ // 노티피케이션과 관련된 값을 넘겨줌; 수정이 일어나면 콜렉션뷰 리스트도 수정이 일어나야함.
+                    "indexPath.row": IndexPath.row
+                ]
+            )// 이 동작은 "editDiary"를 옵저빙하는 옵저버에 diary객체와 IndexPath.row 정보를 전달한다.
+        }
         self.navigationController?.popViewController(animated: true) // 전 화면으로 이동
     }
     

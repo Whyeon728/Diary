@@ -21,6 +21,23 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         self.configureCollectionView() // delegate, dataSource 프로토콜 채택후 호출
         self.loadDiaryList() // UserDefaults 데이터 호출
+        //수정이 일어나면 컬렉션뷰에도 내용이 업데이트 되도록 옵저버 추가
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(editDiaryNotification(_:)),
+            name: NSNotification.Name("editDiary"),
+            object: nil)
+    }
+    
+    @objc func editDiaryNotification(_ notification: Notification)
+    {
+        guard let diary = notification.object as? Diary else { return }
+        guard let row = notification.userInfo?["indexPath.row"] as? Int else { return }
+        self.diaryList[row] = diary // 전달 받은 인덱스값의 배열을 갱신
+        self.diaryList = self.diaryList.sorted(by: { // 다시 리스트를 정렬
+            $0.date.compare($1.date) == .orderedDescending
+        })
+        self.collectionView.reloadData() // 콜렉션뷰 리로드
     }
     
     //MARK: - 콜렉션뷰 속성 설정
@@ -146,7 +163,8 @@ extension ViewController: UICollectionViewDelegate {
         guard let viewController = self.storyboard?.instantiateViewController(withIdentifier: "DiaryDetailViewController") as? DiaryDetailViewController else { return }
         let diary = self.diaryList[indexPath.row] // 현재 선택된 일기의 객체를 할당
         viewController.diary = diary
-        viewController.indexPath = indexPath
+        viewController.indexPath = indexPath // 셀을 선택할때 인덱스 정보가 상세보기 컨트롤러로 넘어감.
+        viewController.delegate = self // DiaryDetailViewController.delegate = self
         
 //        //선택시 컬러지정
 //        let selectedCell:UICollectionViewCell = collectionView.cellForItem(at: indexPath)!
@@ -157,5 +175,15 @@ extension ViewController: UICollectionViewDelegate {
 
         // 콜렉션뷰에서 셀이 선택되면 DiaryDetailViewController가 네비게이션에 푸쉬되면서 화면전환
         self.navigationController?.pushViewController(viewController, animated: true)
+    }
+}
+
+//MARK: - extension DiaryDetailViewDelegate; 삭제
+extension ViewController: DiaryDetailViewDelegate {
+    func didSelectDelete(indexPath: IndexPath) {
+        self.diaryList.remove(at: indexPath.row)
+        self.collectionView.deleteItems(at: [indexPath])
+        print(indexPath.row)
+        print([indexPath])
     }
 }
