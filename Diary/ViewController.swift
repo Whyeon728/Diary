@@ -27,17 +27,50 @@ class ViewController: UIViewController {
             selector: #selector(editDiaryNotification(_:)),
             name: NSNotification.Name("editDiary"),
             object: nil)
+        //star change observer
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(starDiaryNotification(_:)),
+            name: NSNotification.Name("starDiary"),
+            object: nil)
+        //delete observer
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(deleteDiaryNotification(_:)),
+            name: NSNotification.Name("deleteDiary"),
+            object: nil
+        )
     }
     
     @objc func editDiaryNotification(_ notification: Notification)
     {
         guard let diary = notification.object as? Diary else { return }
-        guard let row = notification.userInfo?["indexPath.row"] as? Int else { return }
-        self.diaryList[row] = diary // 전달 받은 인덱스값의 배열을 갱신
+        //다이어리 리스트에 첫번째 배열요소의 uuid와 노티피케이션을 통해 전달받은 일기의 uuid를 비교하여 첫번째로 일치하는 요소의 인덱스를 리턴한다.
+        guard let index = self.diaryList.firstIndex(where: {
+            $0.uuidString == diary.uuidString }) else { return }
+        self.diaryList[index] = diary // 전달 받은 인덱스값의 배열을 갱신
         self.diaryList = self.diaryList.sorted(by: { // 다시 리스트를 정렬
             $0.date.compare($1.date) == .orderedDescending
         })
         self.collectionView.reloadData() // 콜렉션뷰 리로드
+    }
+    
+    @objc func starDiaryNotification(_ notification: Notification)
+    {
+        guard let starDiary = notification.object as? [String: Any] else { return }
+        guard let isStar = starDiary["isStar"] as? Bool else { return }
+        guard let uuidString = starDiary["uuidString"] as? String else { return }
+        guard let index = self.diaryList.firstIndex(where: {
+            $0.uuidString == uuidString }) else { return }
+        self.diaryList[index].isStar = isStar
+    }
+    
+    @objc func deleteDiaryNotification(_ notification: Notification) {
+        guard let uuidString = notification.object as? String else { return }
+        guard let index = self.diaryList.firstIndex(where: {
+            $0.uuidString == uuidString }) else { return }
+        self.diaryList.remove(at: index)
+        self.collectionView.deleteItems(at: [IndexPath(row: index, section: 0)])
     }
     
     //MARK: - 콜렉션뷰 속성 설정
@@ -61,6 +94,7 @@ class ViewController: UIViewController {
     private func saveDiaryList() {
         let data = self.diaryList.map {
             [
+                "uuidString": $0.uuidString,
                 "title": $0.title,
                 "contents": $0.contents,
                 "date": $0.date,
@@ -80,11 +114,18 @@ class ViewController: UIViewController {
         else {return}
         self.diaryList = data.compactMap {//축약인자로 딕셔너리에 차례로 접근
             // 딕셔너리의 value가 Any타입이므로 String, Date, Bool 으로 타입캐스팅
+            guard let uuidString = $0["uuidString"] as? String else { return nil }
             guard let title = $0["title"] as? String else { return nil }
             guard let contents = $0["contents"] as? String else { return nil }
             guard let date = $0["date"] as? Date else {return nil}
             guard let isStar = $0["isStar"] as? Bool else { return nil }
-            return Diary(title: title, contents: contents, date: date, isStar: isStar)
+            return Diary(
+                uuidString: uuidString,
+                title: title,
+                contents: contents,
+                date: date,
+                isStar: isStar
+            )
         }
         
         //MARK: - 로드될때 일기가 최신순으로 정렬이 되도록 하는 기능
@@ -164,7 +205,7 @@ extension ViewController: UICollectionViewDelegate {
         let diary = self.diaryList[indexPath.row] // 현재 선택된 일기의 객체를 할당
         viewController.diary = diary
         viewController.indexPath = indexPath // 셀을 선택할때 인덱스 정보가 상세보기 컨트롤러로 넘어감.
-        viewController.delegate = self // DiaryDetailViewController.delegate = self
+        //viewController.delegate = self // DiaryDetailViewController.delegate = self
         
 //        //선택시 컬러지정
 //        let selectedCell:UICollectionViewCell = collectionView.cellForItem(at: indexPath)!
@@ -179,11 +220,18 @@ extension ViewController: UICollectionViewDelegate {
 }
 
 //MARK: - extension DiaryDetailViewDelegate; 삭제
-extension ViewController: DiaryDetailViewDelegate {
-    func didSelectDelete(indexPath: IndexPath) {
-        self.diaryList.remove(at: indexPath.row)
-        self.collectionView.deleteItems(at: [indexPath])
-        print(indexPath.row)
-        print([indexPath])
-    }
-}
+//extension ViewController: DiaryDetailViewDelegate {
+//    func didSelectDelete(indexPath: IndexPath) {
+//        self.diaryList.remove(at: indexPath.row)
+//        self.collectionView.deleteItems(at: [indexPath])
+//        print(indexPath.row)
+//        print([indexPath])
+//    }
+    //MARK: - extension DiaryDetailViewDelegate 별표 표시
+
+    //즐겨찾기 속성이 실 데이터 리스트에 반영됨.
+//    func didSelectStar(indexPath: IndexPath, isStar: Bool) {
+//        //DiaryDetailView로부터 넘겨받은 인덱스 셀에 즐겨찾기 속성 업데이트
+//        self.diaryList[indexPath.row].isStar = isStar //DiaryDetailView로부터 넘겨받은 인덱스 셀에 즐겨찾기 속성 업데이트
+//    }
+//}

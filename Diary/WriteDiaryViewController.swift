@@ -141,19 +141,32 @@ class WriteDiaryViewController: UIViewController {
         guard let title = self.titleTextField.text else {return}
         guard let contents = self.contentsTextView.text else {return}
         guard let date = self.diaryDate else { return } //데이트 피커에서 선택된 값을 문자열로 저장한 프로퍼티 할당
-        let diary = Diary(title: title, contents: contents, date: date, isStar: false) // 다이어리객체 생성
         
         // 등록인지 수정인지 체킹
         switch self.diaryEditorMode {
+            
         case .new: //등록
+            let diary = Diary(
+                uuidString: UUID().uuidString, //고유한 식별자가 생성됨.
+                title: title,
+                contents: contents,
+                date: date,
+                isStar: false)
             self.delegate?.didSelectRegister(diary: diary)
-        case let .edit(IndexPath, _):
+            
+        case let .edit(IndexPath, diary):
+            let diary = Diary(
+                uuidString: diary.uuidString,
+                title: title,
+                contents: contents,
+                date: date, isStar:
+                    diary.isStar
+            )
             NotificationCenter.default.post(
                 name: NSNotification.Name("editDiary"), //노티피케이션의 이름; 이 이름으로 옵저버에서 메시지 발생 관찰
                 object: diary, //노티피케이션센터를 통해 전달할 객체의 이름; 수정된 내용의 다이어리 객체
-                userInfo: [ // 노티피케이션과 관련된 값을 넘겨줌; 수정이 일어나면 콜렉션뷰 리스트도 수정이 일어나야함.
-                    "indexPath.row": IndexPath.row
-                ]
+                // 노티피케이션과 관련된 값을 넘겨줌; 수정이 일어나면 콜렉션뷰 리스트도 수정이 일어나야함.
+                userInfo: nil
             )// 이 동작은 "editDiary"를 옵저빙하는 옵저버에 diary객체와 IndexPath.row 정보를 전달한다.
         }
         self.navigationController?.popViewController(animated: true) // 전 화면으로 이동
